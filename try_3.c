@@ -26,23 +26,28 @@ uint8_t chanelDI;
 uint8_t state;
 uint8_t chanelAI;
 uint8_t valMode;
+uint8_t chanelRel;
+uint8_t valRel;
 uint16_t AdcValue;
+
 char adcValStr[10];
 
 //------HANDLE DI -------------------------
 int handle_DI(uint8_t channel)
 {
-   Ctr700DrvGetDigiIn(channel, &state);
-   if (state == (uint8_t)1)
-   {
-       write(STDOUT_FILENO, "on", strlen("on"));
-   }
-   if (state == (uint8_t)0)
-   {
-       write(STDOUT_FILENO, "off", strlen("off"));
-   }
-
-   return 0;
+    Result = Ctr700DrvGetDigiIn(channel, &state);
+    if (Result != kCtr700DrvResult_Success)
+    {
+        if (state == (uint8_t)1)
+        {
+            write(STDOUT_FILENO, "on", strlen("on"));
+        }
+        if (state == (uint8_t)0)
+        {
+            write(STDOUT_FILENO, "off", strlen("off"));
+        }
+    }
+        return 0;
 }
 //------HANDLE DO -------------------------
 int handle_DO(uint8_t channelDO, uint8_t valueDO)
@@ -51,6 +56,19 @@ int handle_DO(uint8_t channelDO, uint8_t valueDO)
     if (Result != kCtr700DrvResult_Success)
     {
         char * error = "Failed to control DO";
+        write(STDOUT_FILENO, error, strlen(error));
+        return EXIT_FAILURE;
+    }
+
+    return 0;
+}
+//------HANDLE RELAY -------------------------
+int handle_REL(uint8_t channelREL, uint8_t valueREL)
+{
+    Result = Ctr700DrvSetRelay(channelREL, valueREL);
+    if (Result != kCtr700DrvResult_Success)
+    {
+        char * error = "Failed to control Relay";
         write(STDOUT_FILENO, error, strlen(error));
         return EXIT_FAILURE;
     }
@@ -139,11 +157,6 @@ int main()
                 //*******************
 
                 bytes = bytes - length;
-                // if (strcmp(commands[0], "info") == 0)
-                // {
-                //     write(STDOUT_FILENO, "doingg--", strlen("doingg--"));
-                //     write(STDOUT_FILENO, commands[1], strlen(commands[1]));
-                // }
                 if (strcmp(commands[0], "di") == 0)
                 {
                     chanelDI = (uint8_t)atoi(commands[1]);
@@ -160,6 +173,12 @@ int main()
                     chanelAI = (uint8_t)atoi(commands[1]);
                     AdcValue = (uint8_t)atoi(commands[2]);
                     handle_AI(chanelAI, AdcValue);
+                }
+                if (strcmp(commands[0], "rel") == 0)
+                {
+                    chanelRel = (uint8_t)atoi(commands[1]);
+                    valRel = (uint8_t)atoi(commands[2]);
+                    handle_REL(chanelRel, valRel);
                 }
             }
         }
